@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User model for authentication
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  // 暂时注释，等后续关联用户时再启用
+  // deregistrationBusinesses DeregistrationBusiness[]
+
+  @@map("users")
+}
+
+// Deregistration business model - 注销业务管理
+model DeregistrationBusiness {
+  id                String   @id @default(cuid())
+  companyName       String   // 企业名称
+  registrationNumber String? // 设立编号
+  feeAmount         Float?   // 费用金额
+  isPaid            Boolean  @default(false) // 是否已付款
+  status            String   @default("pending_entry") // 待录入、已提交、待签字、初审驳回、已初审、已驳回、已完成、已终止、已完结
+  needsProcessing   Boolean  @default(false) // 是否需要处理（状态有变化时设为true）
+  description       String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  userId    String?   // 改为可选，暂时不关联用户
+  // user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)  // 暂时注释外键关系
+  deregistrationLogs     DeregistrationLog[]
+  portAllocations PortAllocation[]
+
+  // ========== 新增：工商同步字段 ==========
+  unifiedSocialCreditCode            String?   // 统一社会信用代码
+  legalRepresentativeName            String?   // 法定代表人姓名
+  legalRepresentativeIdNumber        String?   // 法人身份证号
+  legalRepresentativePhone           String?   // 法人手机号
+  address                            String?   // 地址
+  legalRepresentativeIdPhotoUrl      String?   // 法人身份证照片URL
+  legalRepresentativeIdPhotoPath     String?   // 法人身份证照片物理路径
+  registrationTime                   DateTime? // 注册时间
+
+  // ========== 新增：业务管理字段 ==========
+  accountManager                     String?   // 客户经理
+  businessHandler                    String?   // 业务办理人
+  lastStatusChangeTime               DateTime? // 最后状态变更时间
+  businessStartHandlingTime          DateTime? // 业务开始办理时间
+  completionTime                     DateTime? // 办结时间
+
+  // ========== 新增：财务字段 ==========
+  paymentStatus                      Int?      @default(0)
+  refundStatus                       Int?      @default(0)
+  orderNumber                        String?   // 订单编号
+
+  // ========== 新增：微信字段 ==========
+  legalRepresentativeWechatOpenid    String?   // 法人微信openid
+  legalRepresentativeAvatarUrl       String?   // 法人头像URL
+  legalRepresentativeNickname        String?   // 法人昵称
+
+  // ========== 新增：自动加好友字段 ==========
+  friendRequestStatus                String?   @default("pending") // pending(待添加)/invited(已邀请)/added(已通过)/failed(失败)
+  friendRequestTime                  DateTime? // 发送邀请时间
+  friendRequestMessage               String?   // 实际使用的附加消息
+  friendAddedTime                    DateTime? // 好友通过时间
+
+  // ========== 新增：企业注册状态 ==========
+  registrationStatus                 String?   @default("开业") // 开业 / 注销 / null(未检查)
+  registrationStatusCheckedAt        DateTime? // 上次检查时间
+  registrationStatusSource           String?   // 数据来源：xixian_scjd_sjgs
+
+  // ========== 新增：联系结果字段 ==========
+  contactResult                      String?   // 联系结果：waiting_wechat/added_wechat/no_contact
+  contactTime                        DateTime? // 联系时间
+  contactRemark                     String?   // 联系备注
+
+  @@map("deregistration_businesses")
+  @@index([userId])
+}
+
+// Deregistration log model - 注销业务日志
+model DeregistrationLog {
+  id        String   @id @default(cuid())
+  action    String   // 操作类型：创建、状态变更、付款等
+  oldStatus String?  // 变更前的状态
+  newStatus String?  // 变更后的状态
+  oldValue  String?  // 变更前的值
+  newValue  String?  // 变更后的值
+  remark    String?  // 备注信息
+  operator  String   // 操作人
+  createdAt DateTime @default(now())
+
+  // Relations
+  deregistrationBusinessId String
+  deregistrationBusiness   DeregistrationBusiness @relation(fields: [deregistrationBusinessId], references: [id], onDelete: Cascade)
+
+  @@map("deregistration_logs")
+}
+
+// Port allocation model for tracking allocated ports across deregistration businesses
+model PortAllocation {
+  id        String   @id @default(cuid())
+  port      Int      @unique // Port number, unique across all deregistration businesses
+  deregistrationBusinessId String
+  allocatedAt DateTime @default(now())
+
+  // Relations
+  deregistrationBusiness   DeregistrationBusiness @relation(fields: [deregistrationBusinessId], references: [id], onDelete: Cascade)
+
+  @@map("port_allocations")
+}
+
+// Daily sync record model - 每日同步记录
+model DailySyncRecord {
+  id            String   @id @default(cuid())
+  businessDate  DateTime @db.Date @unique
+  status        String   @default("pending") // pending-未同步, synced-已同步
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("daily_sync_records")
+  @@index([businessDate])
+  @@index([status])
+}
+
