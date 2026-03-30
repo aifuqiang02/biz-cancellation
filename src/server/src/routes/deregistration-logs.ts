@@ -8,7 +8,7 @@ const router = Router()
 // Get all deregistration logs for a business
 router.get('/business/:businessId', authenticateToken, async (req, res) => {
   try {
-    const { businessId } = req.params
+    const { businessId } = req.params as { businessId: string }
     if (!businessId) {
       return res.status(400).json({ error: 'Business ID is required' })
     }
@@ -107,7 +107,7 @@ router.post('/', authenticateToken, async (req, res) => {
 // Get a specific deregistration log
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     if (!id) {
       return res.status(400).json({ error: 'Log ID is required' })
     }
@@ -135,7 +135,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 // Update a deregistration log
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     if (!id) {
       return res.status(400).json({ error: 'Log ID is required' })
     }
@@ -178,7 +178,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 // Delete a deregistration log
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     if (!id) {
       return res.status(400).json({ error: 'Log ID is required' })
     }

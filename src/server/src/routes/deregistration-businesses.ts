@@ -127,8 +127,7 @@ router.get('/potential', authenticateToken, async (req, res) => {
       where: {
         userId: null,
         legalRepresentativePhone: {
-          not: null,
-          not: '',
+          gt: '',
         },
       },
     })
@@ -141,8 +140,7 @@ router.get('/potential', authenticateToken, async (req, res) => {
           lte: thirtyDaysAgo, // 注册时间 <= 30天前
         },
         legalRepresentativePhone: {
-          not: null,
-          not: '',
+          gt: '',
         },
       },
       select: {
@@ -190,7 +188,7 @@ router.get('/debug/by-name/:name', async (req, res) => {
 // Get single deregistration business by id
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string } as { id: string }
     if (!id) {
       return res.status(400).json(ResponseUtil.badRequest('注销业务ID是必需的'))
     }
@@ -213,7 +211,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 // Update deregistration business
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     if (!id) {
       return res.status(400).json(ResponseUtil.badRequest('注销业务ID是必需的'))
     }
@@ -246,7 +244,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 // Mark business as processed (reset needsProcessing to false)
 router.post('/:id/mark-processed', authenticateToken, async (req, res) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     if (!id) {
       return res.status(400).json(ResponseUtil.badRequest('注销业务ID是必需的'))
     }
@@ -280,7 +278,7 @@ router.post('/:id/mark-processed', authenticateToken, async (req, res) => {
 // POST /api/businesses/:id/contact
 router.post('/:id/contact', authenticateToken, async (req, res) => {
   try {
-    const { id } = req.params
+    const { id } = req.params as { id: string }
     const { contactResult, contactRemark } = req.body
 
     console.log('[Contact] 收到提交请求, id:', id)

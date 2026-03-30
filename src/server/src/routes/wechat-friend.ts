@@ -39,8 +39,7 @@ router.get('/pending', async (req, res) => {
             lte: oneMonthAgo
           },
           legalRepresentativePhone: {
-            not: null,
-            not: ''
+            gt: '',
           },
           OR: [
             { friendRequestStatus: null },
